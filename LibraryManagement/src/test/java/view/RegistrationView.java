@@ -5,7 +5,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -130,25 +133,65 @@ public class RegistrationView extends JFrame {
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
 
+            // Validate name
+            if (!name.matches("[a-zA-Z ]+")) {
+                JOptionPane.showMessageDialog(RegistrationView.this, "Tên không được chứa số hoặc ký tự đặc biệt.",
+                        "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             // Validate age
-            if (age < 0) {
-                JOptionPane.showMessageDialog(RegistrationView.this, "Age must be a non-negative number.",
+            try {
+                age = Integer.parseInt(ageField.getText());
+                if (age < 0) {
+                    JOptionPane.showMessageDialog(RegistrationView.this, "Tuổi phải là số không âm.",
+                            "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(RegistrationView.this, "Tuổi phải là một số nguyên.",
                         "Registration Failed", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Validate phone number
-            Pattern phonePattern = Pattern.compile("(84|0[3|5|7|8|9])+([0-9]{8})\\b");
+            Pattern phonePattern = Pattern.compile("^0[0-9]{9}$");
             Matcher matcher = phonePattern.matcher(phoneNumber);
             if (!matcher.matches()) {
-                JOptionPane.showMessageDialog(RegistrationView.this, "Invalid phone number.",
+                JOptionPane.showMessageDialog(RegistrationView.this, "Số điện thoại không hợp lệ.",
+                        "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Validate accountId
+            try {
+                accountId = Integer.parseInt(accountIdField.getText());
+                if (registrationDAO.isAccountIdExist(accountId)) {
+                    JOptionPane.showMessageDialog(RegistrationView.this, "Account ID đã tồn tại.",
+                            "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(RegistrationView.this, "Account ID phải là một số nguyên.",
+                        "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                return;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(RegistrationView.this, "Lỗi cơ sở dữ liệu.",
+                        "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Validate username
+            if (!username.matches("^[A-Z0-9][A-Za-z0-9]*$")) {
+                JOptionPane.showMessageDialog(RegistrationView.this, "Username phải bắt đầu bằng chữ cái in hoa hoặc số, và chỉ chứa chữ cái và số.",
                         "Registration Failed", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Validate password
-            if (!password.matches("^(?=.*[A-Z0-9])[A-Za-z0-9]+$")) {
-                JOptionPane.showMessageDialog(RegistrationView.this, "Invalid password. Password must start with an uppercase letter or a number, and can only contain letters and numbers.",
+            if (!password.matches("^[A-Z0-9][A-Za-z0-9]*$")) {
+                JOptionPane.showMessageDialog(RegistrationView.this, "Password phải bắt đầu bằng chữ cái in hoa hoặc số, và chỉ chứa chữ cái và số.",
                         "Registration Failed", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -156,27 +199,55 @@ public class RegistrationView extends JFrame {
             try {
                 // Check if username exists
                 if (registrationDAO.isUsernameExist(username)) {
-                    JOptionPane.showMessageDialog(RegistrationView.this, "Username already exists.",
+                    JOptionPane.showMessageDialog(RegistrationView.this, "Username đã tồn tại.",
                             "Registration Failed", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                // Register new user
-                boolean isRegistered = registrationDAO.registerUser(name, age, phoneNumber, accountId, username, password);
-                if (isRegistered) {
-                    JOptionPane.showMessageDialog(RegistrationView.this, "Registration successful.",
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                // Hash the password using SHA-256
+                String hashedPassword = hashPassword(password);
+                System.out.println("Hashed Password: " + hashedPassword);
 
+                // Register new user with hashed password
+                boolean isRegistered = registrationDAO.registerUser(name, age, phoneNumber, accountId, username, hashedPassword);
+                if (isRegistered) {
+                    JOptionPane.showMessageDialog(RegistrationView.this, "Đăng ký thành công.",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                    LoginView();
                     dispose(); // Close registration window after successful registration
                 } else {
-                    JOptionPane.showMessageDialog(RegistrationView.this, "Registration failed.",
+                    JOptionPane.showMessageDialog(RegistrationView.this, "Đăng ký thất bại.",
                             "Registration Failed", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(RegistrationView.this, "Database error.",
+                JOptionPane.showMessageDialog(RegistrationView.this, "Lỗi cơ sở dữ liệu.",
+                        "Registration Failed", JOptionPane.ERROR_MESSAGE);
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(RegistrationView.this, "Lỗi mã hóa.",
                         "Registration Failed", JOptionPane.ERROR_MESSAGE);
             }
+        }
+
+        private void LoginView() {
+            // TODO Auto-generated method stub
+            LoginView a = new LoginView();
+            a.setVisible(true);
+        }
+
+        private String hashPassword(String password) throws NoSuchAlgorithmException {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedHash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : encodedHash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
         }
     }
 

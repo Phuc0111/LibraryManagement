@@ -36,19 +36,20 @@ public class BorrowedBookInfoDAO {
         return borrowedBooks;
     }
     
-    public static void addBorrowedBook(int customerId, String customerName, int bookId, String title, String authors, Date borrowDate) {
-        String query = "INSERT INTO borrow_info (CUSTOMER_ID, CUSTOMER_NAME, BOOK_ID, TITLE, AUTHORS, BORROW_DATE) VALUES (?, ?, ?, ?, ?, ?)";
+    public static boolean addBorrowedBook(int customerId, int bookId, String title, String authors, Date borrowDate) {
+        String query = "INSERT INTO borrow_info (CUSTOMER_ID, BOOK_ID, TITLE, AUTHORS, BORROW_DATE) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, customerId);
-            stmt.setString(2, customerName);
-            stmt.setInt(3, bookId);
-            stmt.setString(4, title);
-            stmt.setString(5, authors);
-            stmt.setDate(6, new java.sql.Date(borrowDate.getTime()));
-            stmt.executeUpdate();
+            stmt.setInt(2, bookId);
+            stmt.setString(3, title);
+            stmt.setString(4, authors);
+            stmt.setDate(5, new java.sql.Date(borrowDate.getTime()));
+            int rowsInserted = stmt.executeUpdate();
+            return rowsInserted > 0; // Trả về true nếu có ít nhất một dòng được thêm vào
         } catch (SQLException e) {
             e.printStackTrace();
+            return false; // Trả về false nếu có lỗi xảy ra
         }
     }
 

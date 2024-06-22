@@ -98,8 +98,8 @@ public class LibraryClient {
         try {
             output.writeObject("CHANGE_PASS");
             output.writeInt(customerId);
-            output.writeUTF(currentPassword);
-            output.writeUTF(newPassword);
+            output.writeObject(currentPassword);
+            output.writeObject(newPassword);
             output.flush();
             return (String) input.readObject();
         } finally {

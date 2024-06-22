@@ -74,8 +74,15 @@ SET BOOK_ID = NULL,
 ALTER TABLE borrow_info
 DROP COLUMN BORROW_STATUS;
 
+ALTER TABLE borrow_info
+ADD CONSTRAINT FK_borrow_info_Books
+FOREIGN KEY (BOOK_ID) REFERENCES Books(BookID);
+
+-- Xem cấu trúc của bảng borrow_info
+EXEC sp_help 'borrow_info';
 
 SELECT b.CUSTOMER_ID, c.Name, b.BORROW_DATE, b.BOOK_ID, b.TITLE, b.AUTHORS
 FROM borrow_info b
 JOIN Customers c ON b.CUSTOMER_ID = c.CustomerID;
 
+ALTER TABLE Customers ALTER COLUMN Password VARCHAR(64);

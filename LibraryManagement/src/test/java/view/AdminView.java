@@ -175,12 +175,17 @@ public class AdminView extends JFrame {
         borrowerTable = new JTable();
         JScrollPane borrowerScrollPane = new JScrollPane(borrowerTable);
         JPanel borrowerButtonPanel = new JPanel();
+        JButton updateBorrower = new JButton("Cập nhập người mượn");
+        
+        borrowerButtonPanel.add(updateBorrower, BorderLayout.SOUTH);
+        
         acceptReturnButton = new JButton("Nhận sách");
         rejectReturnButton = new JButton("Từ chối cho mượn sách");
 
         // Đặt kích thước cho các JButton
         setComponentSize(acceptReturnButton, 150, 30);
         setComponentSize(rejectReturnButton, 150, 30);
+        setComponentSize(updateBorrower, 200, 30);
 
 //        borrowerButtonPanel.add(acceptReturnButton);
 //        borrowerButtonPanel.add(rejectReturnButton);
@@ -196,7 +201,7 @@ public class AdminView extends JFrame {
 
         // Đặt kích thước cho các JButton
         setComponentSize(addCustomerButton, 150, 30);
-        setComponentSize(updateCustomerButton, 150, 30);
+        setComponentSize(updateCustomerButton, 200, 30);
         setComponentSize(deleteCustomerButton, 150, 30);
 
         customerTable = new JTable();
@@ -205,7 +210,7 @@ public class AdminView extends JFrame {
 
         // Thêm action listeners cho các nút để thực hiện các chức năng tương ứng
 //        customerButtonPanel.add(addCustomerButton);
-//        customerButtonPanel.add(updateCustomerButton);
+        customerButtonPanel.add(updateCustomerButton);
         customerButtonPanel.add(deleteCustomerButton);
         manageCustomersPanel.add(customerButtonPanel, BorderLayout.SOUTH);
 
@@ -233,7 +238,10 @@ public class AdminView extends JFrame {
         updateInfoButton.addActionListener(e -> updateInfo());
         changePasswordButton.addActionListener(e -> showChangePasswordDialog());
         logoutButton.addActionListener(e -> logout());
-
+        
+        updateCustomerButton.addActionListener(e -> loadCustomers());
+        updateBorrower.addActionListener(e -> loadBorrowInfos());
+        
         // Load dữ liệu khách hàng
         loadCustomers();
         loadBooks();

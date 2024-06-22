@@ -271,6 +271,15 @@ public class CustomerView extends JFrame {
                 try {
                     String response = client.changePassword(customer.getId(), currentPassword, newPassword);
                     JOptionPane.showMessageDialog(this, response, "Kết quả thay đổi mật khẩu", JOptionPane.INFORMATION_MESSAGE);
+                    // Cập nhật lại các dữ liệu khi thay đổi mật khẩu thành công
+                    if ("Password changed successfully.".equals(response)) {
+                        // Cập nhật lại dữ liệu ở personalInfoPanel
+                        nameTextField.setText(customer.getName());
+                        ageTextField.setText(String.valueOf(customer.getAge()));
+                        phoneNumberTextField.setText(customer.getPhoneNumber());
+                        // Load lại sách mượn nếu có thay đổi
+                        loadBorrowedBooks();
+                    }
                 } catch (IOException | ClassNotFoundException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Lỗi khi thay đổi mật khẩu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);

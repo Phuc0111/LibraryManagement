@@ -60,15 +60,17 @@ public class BookDAO {
         }
     }
     
-    public static void updateBookQuantity(int bookId, int newQuantity) {
+    public static boolean updateBookQuantity(int bookId, int newQuantity) {
         String query = "UPDATE Books SET Quantity = ? WHERE BookID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, newQuantity);
             stmt.setInt(2, bookId);
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0; // Trả về true nếu có ít nhất một dòng bị ảnh hưởng
         } catch (SQLException e) {
             e.printStackTrace();
+            return false; // Trả về false nếu có lỗi xảy ra
         }
     }
     

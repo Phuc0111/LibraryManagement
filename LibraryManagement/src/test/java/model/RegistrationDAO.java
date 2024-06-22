@@ -1,15 +1,28 @@
 package model;
 
-import model.DatabaseConnection;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class RegistrationDAO {
-    
+
     public boolean isUsernameExist(String username) throws SQLException {
         String query = "SELECT * FROM Customers WHERE Username = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, username);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
+
+    public boolean isAccountIdExist(int accountId) throws SQLException {
+        String query = "SELECT * FROM Customers WHERE AccountID = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, accountId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
             }

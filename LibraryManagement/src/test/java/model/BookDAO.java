@@ -5,6 +5,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BookDAO {
+	
+	public static boolean doesBookIdExist(int id) {
+	    boolean exists = false;
+	    String query = "SELECT COUNT(*) FROM Books WHERE BookID = ?";
+	    
+	    try (Connection connection = DatabaseConnection.getConnection();
+	         PreparedStatement statement = connection.prepareStatement(query)) {
+	        
+	        statement.setInt(1, id);
+	        try (ResultSet resultSet = statement.executeQuery()) {
+	            if (resultSet.next()) {
+	                exists = resultSet.getInt(1) > 0;
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    return exists;
+	}
+
 
     public static List<Book> getAllBooks() {
         List<Book> books = new ArrayList<>();

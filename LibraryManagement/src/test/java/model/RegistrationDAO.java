@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class RegistrationDAO {
 
-    public boolean isUsernameExist(String username) throws SQLException {
+    public static boolean isUsernameExist(String username) throws SQLException {
         String query = "SELECT * FROM Customers WHERE Username = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
@@ -18,7 +18,7 @@ public class RegistrationDAO {
         }
     }
 
-    public boolean isAccountIdExist(int accountId) throws SQLException {
+    public static boolean isAccountIdExist(int accountId) throws SQLException {
         String query = "SELECT * FROM Customers WHERE AccountID = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
@@ -29,7 +29,7 @@ public class RegistrationDAO {
         }
     }
 
-    public boolean registerUser(String name, int age, String phoneNumber, int accountId, String username, String password) throws SQLException {
+    public static boolean registerUser(String name, int age, String phoneNumber, int accountId, String username, String password) throws SQLException {
         String query = "INSERT INTO Customers (Name, Age, PhoneNumber, AccountID, Username, Password) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {

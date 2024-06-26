@@ -22,11 +22,43 @@ public class LibraryClient {
         output = new ObjectOutputStream(socket.getOutputStream());
         input = new ObjectInputStream(socket.getInputStream());
     }
+    
+    public String registerUser(String name, int age, String phoneNumber, int accountId, String username, String password) throws IOException, ClassNotFoundException {
+        connect();
+        try {
+            output.writeObject("REGISTER_USER");
+            output.writeObject(name);
+            output.writeInt(age);
+            output.writeObject(phoneNumber);
+            output.writeInt(accountId);
+            output.writeObject(username);
+            output.writeObject(password);
+            output.flush();
+
+            return (String) input.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "ERROR";
+        } finally {
+            close();
+        }
+    }
 
     public List<Book> getAllBooks() throws IOException, ClassNotFoundException {
         connect();
         try {
             output.writeObject("GET_ALL_BOOKS");
+            output.flush();
+            return (List<Book>) input.readObject();
+        } finally {
+            close();
+        }
+    }
+    
+    public List<Book> getBookCard() throws IOException, ClassNotFoundException {
+        connect();
+        try {
+            output.writeObject("GET_ALL_BOOKS_CARD");
             output.flush();
             return (List<Book>) input.readObject();
         } finally {

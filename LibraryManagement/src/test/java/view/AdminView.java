@@ -11,6 +11,7 @@ import model.Customer;
 import model.CustomerDAO;
 import model.BorrowInfoDAO;
 import model.BorrowedBookInfo;
+import model.ButtonHoverListener;
 
 import java.awt.*;
 import java.util.List;
@@ -45,6 +46,7 @@ public class AdminView extends JFrame {
     private JButton updateInfoButton;
     private JButton changePasswordButton;
     private JButton logoutButton;
+    private JButton MainButton;
 
     private Admin adminObject;
 
@@ -54,17 +56,19 @@ public class AdminView extends JFrame {
         setTitle("Admin Panel");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        setLocationRelativeTo(null);
+        
         // Sidebar
         sidebarPanel = new JPanel();
-        sidebarPanel.setBackground(Color.LIGHT_GRAY);
+        sidebarPanel.setBackground(Color.WHITE);
         sidebarPanel.setPreferredSize(new Dimension(200, getHeight()));
-        sidebarPanel.setLayout(new GridLayout(4, 1));
+        sidebarPanel.setLayout(new GridLayout(5, 1));
 
-        personalInfoButton = createSidebarButton("Thông tin cá nhân");
-        manageBooksButton = createSidebarButton("Quản lí sách");
-        manageBorrowersButton = createSidebarButton("Quản lí người mượn");
-        manageCustomersButton = createSidebarButton("Quản lí khách hàng");
+        MainButton = createSidebarButton("Library BP", new ImageIcon(getClass().getResource("/logo-library.png")), 30, 30);
+        personalInfoButton = createSidebarButton("Thông tin cá nhân",  new ImageIcon(getClass().getResource("/User.png")), 30, 30);
+        manageBooksButton = createSidebarButton("Quản lí sách",  new ImageIcon(getClass().getResource("/Book.png")), 30, 30);
+        manageBorrowersButton = createSidebarButton("Quản lí người mượn" , new ImageIcon(getClass().getResource("/Borrower.png")), 30, 30);
+        manageCustomersButton = createSidebarButton("Quản lí khách hàng" , new ImageIcon(getClass().getResource("/Customer.png")), 30, 30);
 
         personalInfoButton.addActionListener(e -> {
             resetButtonBackgrounds();
@@ -86,7 +90,9 @@ public class AdminView extends JFrame {
             manageCustomersButton.setBackground(Color.WHITE);
             showLayout(manageCustomersPanel, "Quản lí khách hàng");
         });
-
+        
+        MainButton.setEnabled(false);
+        sidebarPanel.add(MainButton);
         sidebarPanel.add(personalInfoButton);
         sidebarPanel.add(manageBooksButton);
         sidebarPanel.add(manageBorrowersButton);
@@ -175,9 +181,9 @@ public class AdminView extends JFrame {
         borrowerTable = new JTable();
         JScrollPane borrowerScrollPane = new JScrollPane(borrowerTable);
         JPanel borrowerButtonPanel = new JPanel();
-        JButton updateBorrower = new JButton("Cập nhập người mượn");
+//        JButton updateBorrower = new JButton("Cập nhập người mượn");
         
-        borrowerButtonPanel.add(updateBorrower, BorderLayout.SOUTH);
+//        borrowerButtonPanel.add(updateBorrower, BorderLayout.SOUTH);
         
         acceptReturnButton = new JButton("Nhận sách");
         rejectReturnButton = new JButton("Từ chối cho mượn sách");
@@ -185,7 +191,7 @@ public class AdminView extends JFrame {
         // Đặt kích thước cho các JButton
         setComponentSize(acceptReturnButton, 150, 30);
         setComponentSize(rejectReturnButton, 150, 30);
-        setComponentSize(updateBorrower, 200, 30);
+//        setComponentSize(updateBorrower, 200, 30);
 
 //        borrowerButtonPanel.add(acceptReturnButton);
 //        borrowerButtonPanel.add(rejectReturnButton);
@@ -210,8 +216,8 @@ public class AdminView extends JFrame {
 
         // Thêm action listeners cho các nút để thực hiện các chức năng tương ứng
 //        customerButtonPanel.add(addCustomerButton);
-        customerButtonPanel.add(updateCustomerButton);
-        customerButtonPanel.add(deleteCustomerButton);
+//        customerButtonPanel.add(updateCustomerButton);
+//        customerButtonPanel.add(deleteCustomerButton);
         manageCustomersPanel.add(customerButtonPanel, BorderLayout.SOUTH);
 
         // Thêm manageCustomersPanel vào mainPanel
@@ -229,9 +235,9 @@ public class AdminView extends JFrame {
         updateBookButton.addActionListener(e -> showUpdateBookDialog());
         deleteBookButton.addActionListener(e -> deleteBook());
 
-        acceptReturnButton.addActionListener(e -> acceptReturn());
-        rejectReturnButton.addActionListener(e -> rejectReturn());
-        
+//        acceptReturnButton.addActionListener(e -> acceptReturn());
+//        rejectReturnButton.addActionListener(e -> rejectReturn());
+      
         deleteCustomerButton.addActionListener(e -> deleteCustomer());
 
         // Thêm action listener cho các button
@@ -240,7 +246,20 @@ public class AdminView extends JFrame {
         logoutButton.addActionListener(e -> logout());
         
         updateCustomerButton.addActionListener(e -> loadCustomers());
-        updateBorrower.addActionListener(e -> loadBorrowInfos());
+//        updateBorrower.addActionListener(e -> loadBorrowInfos());
+        
+        //Customer Button
+        CustomeButton(addBookButton, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(updateBookButton, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(deleteBookButton, 150, 30,Color.BLACK ,Color.WHITE);
+        
+        CustomeButton(updateInfoButton, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(changePasswordButton, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(logoutButton, 150, 30,Color.BLACK ,Color.WHITE);
+        
+//        CustomeButton(updateBorrower, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(updateCustomerButton, 150, 30,Color.BLACK ,Color.WHITE);
+        CustomeButton(deleteCustomerButton, 150, 30,Color.BLACK ,Color.WHITE);
         
         // Load dữ liệu khách hàng
         loadCustomers();
@@ -248,14 +267,30 @@ public class AdminView extends JFrame {
         loadBorrowInfos();
     }
 
-    private JButton createSidebarButton(String text) {
-        JButton button = new JButton(text);
+    private JButton createSidebarButton(String text, ImageIcon icon, int desiredWidth, int desiredHeight) {
+        JButton button = new JButton();
         button.setOpaque(true);
         button.setContentAreaFilled(true);
         button.setBorderPainted(false);
         button.setBackground(null);
-        button.setPreferredSize(new Dimension(300, 400));
+        button.setPreferredSize(new Dimension(200, 30));
+        
+        ImageIcon resizedIcon = resizeImageIcon(icon, desiredWidth, desiredHeight);
+        
+        // Tạo một label để chứa icon và text
+        JLabel label = new JLabel(text, resizedIcon, JLabel.CENTER);
+        label.setHorizontalTextPosition(JLabel.RIGHT); // Đặt vị trí của text
+        
+        // Đặt label làm nội dung của button
+        button.add(label);
+        
         return button;
+    }
+    
+    private ImageIcon resizeImageIcon(ImageIcon icon, int width, int height) {
+        Image img = icon.getImage();
+        Image resizedImage = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(resizedImage);
     }
 
     private void resetButtonBackgrounds() {
@@ -289,9 +324,9 @@ public class AdminView extends JFrame {
 
     private void loadBooks() {
         List<Book> books = BookDAO.getAllBooks();
-        DefaultTableModel model = new DefaultTableModel(new Object[] { "ID", "Title", "Author", "Quantity" }, 0);
+        DefaultTableModel model = new DefaultTableModel(new Object[] { "ID", "Title", "Author", "Quantity"}, 0);
         for (Book book : books) {
-            model.addRow(new Object[] { book.getId(), book.getTitle(), book.getAuthors(), book.getQuantity() });
+            model.addRow(new Object[] { book.getId(), book.getTitle(), book.getAuthors(), book.getQuantity()});
         }
         bookTable.setModel(model);
     }
@@ -336,19 +371,35 @@ public class AdminView extends JFrame {
         addDialog.add(addButton);
 
         addButton.addActionListener(e -> {
-            int id = Integer.parseInt(idField.getText());
-            String title = titleField.getText();
-            String author = authorField.getText();
-            int quantity = Integer.parseInt(quantityField.getText());
-
-            Book newBook = new Book(id, title, author, quantity);
-            BookDAO.addBook(newBook);
-            loadBooks();
-            addDialog.dispose();
+            try {
+                int id = Integer.parseInt(idField.getText());
+                if (id < 0) {
+                    throw new IllegalArgumentException("ID không được âm.");
+                }
+                if (BookDAO.doesBookIdExist(id)) {
+                    throw new IllegalArgumentException("ID đã tồn tại.");
+                }
+                
+                String title = titleField.getText();
+                String author = authorField.getText();
+                int quantity = Integer.parseInt(quantityField.getText());
+                if(quantity <= 0) {
+                	throw new IllegalArgumentException("Số lượng là số nguyên dương !");
+                }
+                Book newBook = new Book(id, title, author, quantity);
+                BookDAO.addBook(newBook);
+                loadBooks();
+                addDialog.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(addDialog, "ID và số lượng phải là số nguyên hợp lệ.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(addDialog, ex.getMessage(), "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         addDialog.setVisible(true);
     }
+
 
     private void showUpdateBookDialog() {
         int selectedRow = bookTable.getSelectedRow();
@@ -392,14 +443,31 @@ public class AdminView extends JFrame {
         updateDialog.add(updateButton);
 
         updateButton.addActionListener(e -> {
-            String title = titleField.getText();
-            String author = authorField.getText();
-            int quantity = Integer.parseInt(quantityField.getText());
+            try {
+                int id = Integer.parseInt(idField.getText());
+                if (id < 0) {
+                    throw new IllegalArgumentException("ID không được âm.");
+                }
+                if (id != bookId && BookDAO.doesBookIdExist(id)) {
+                    throw new IllegalArgumentException("ID đã tồn tại.");
+                }
+                
+                String title = titleField.getText();
+                String author = authorField.getText();
+                int quantity = Integer.parseInt(quantityField.getText());
+                if (quantity <= 0) {
+                    throw new IllegalArgumentException("Quantity phải là số nguyên dương.");
+                }
 
-            Book updatedBook = new Book(bookId, title, author, quantity);
-            BookDAO.updateBook(updatedBook);
-            loadBooks();
-            updateDialog.dispose();
+                Book updatedBook = new Book(id, title, author, quantity);
+                BookDAO.updateBook(updatedBook);
+                loadBooks();
+                updateDialog.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(updateDialog, "ID và số lượng phải là số nguyên hợp lệ.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(updateDialog, ex.getMessage(), "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         updateDialog.setVisible(true);
@@ -417,19 +485,21 @@ public class AdminView extends JFrame {
         loadBooks();
     }
 
-    private void acceptReturn() {
-        // Implement the logic for accepting book return here
-    }
-
-    private void rejectReturn() {
-        // Implement the logic for rejecting book return here
-    }
-
     private void updateInfo() {
         String newName = nameTextField.getText();
         adminObject.setName(newName);
         AdminDAO.updateAdmin(adminObject); // Implement this method in AdminDAO
         JOptionPane.showMessageDialog(this, "Thông tin đã được cập nhật thành công.");
+    }
+    
+    public void CustomeButton (JButton button, int width, int height, Color colorBgc, Color Foreground) {
+    	button.setPreferredSize(new Dimension(width, height));
+    	button.setBackground(colorBgc);
+    	button.setForeground(Foreground);
+    	button.setBorder(new RoundBorder(10, Color.BLACK)); // Áp dụng RoundBorder
+    	button.setBorderPainted(false); // Ẩn viền của nút
+    	button.setFocusPainted(false); // Ẩn hiệu ứng khi focus
+    	button.addMouseListener(new ButtonHoverListener(button, Color.decode("#C66A5E"), Color.BLACK));
     }
 
     private void showChangePasswordDialog() {

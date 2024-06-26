@@ -1,170 +1,296 @@
 package view;
 
 import javax.swing.*;
-
-import model.Admin;
-import model.Customer;
-import model.DatabaseConnection;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import model.Admin;
+import model.ButtonHoverListener;
+import model.Customer;
+import model.DatabaseConnection;
 
 public class LoginView extends JFrame {
-	private JTextField usernameField;
-	private JPasswordField passwordField;
-	private JButton loginButton;
-	private JPanel mainPanel;
-	private JComboBox<String> roleComboBox;
-	private JButton registerButton;
-	private JPanel p1, p2, p3;
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
+    private JButton registerButton;
+    private JPanel mainPanel;
+    private JComboBox<String> roleComboBox;
 
-	public LoginView() {
-		 setTitle("Login");
-	        setSize(300, 200);
-	        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    private IconButton minimizeButton;
+    private IconButton restoreDownButton;
+    private IconButton closeButton;
 
-	        mainPanel = new JPanel(new BorderLayout());
+    public LoginView() {
+        setTitle("Login");
+        setSize(800, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setUndecorated(true);
+        setShape(new RoundRectangle2D.Double(0, 0, 800, 400, 20, 20));
+        setLocationRelativeTo(null);
 
-	        JLabel title = new JLabel("Login", SwingConstants.CENTER);
-	        JLabel usernameLabel = new JLabel("Username:");
-	        JLabel passwordLabel = new JLabel("Password:");
-	        JLabel roleLabel = new JLabel("Role:");
+        mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setOpaque(false);
 
-	        usernameField = new JTextField();
-	        usernameField.setPreferredSize(new Dimension(100, 20));
-	        passwordField = new JPasswordField();
-	        passwordField.setPreferredSize(new Dimension(100, 20));
+        // Title panel với các nút minimize, restore down và close
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        titlePanel.setBackground(new Color(255, 255, 255, 0));
+        titlePanel.setPreferredSize(new Dimension(800, 20));
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 
-	        // Initialize the role combo box with some example roles
-	        roleComboBox = new JComboBox<>(new String[]{"Admin", "User"});
-	        roleComboBox.setPreferredSize(new Dimension(100, 20));
+        int buttonWidth = 15; // Kích thước của nút minimize, restore down, close
+        int buttonHeight = 15;
 
-	        loginButton = new JButton("Login");
-	        registerButton = new JButton("Register");
+        minimizeButton = createIconButton("/minimize.png", "/minimize_hover.png", buttonWidth, buttonHeight);
+        minimizeButton.addActionListener(e -> setExtendedState(JFrame.ICONIFIED));
+        titlePanel.add(minimizeButton);
 
-	        loginButton.addActionListener(new LoginButtonListener());
-	        registerButton.addActionListener(new RegisterButtonListener());
+        restoreDownButton = createIconButton("/restore_down.png", "/restore_down_hover.png", buttonWidth, buttonHeight);
+        restoreDownButton.addActionListener(e -> {
+            if ((getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+                setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+            } else {
+                setExtendedState(JFrame.NORMAL);
+            }
+        });
+        titlePanel.add(restoreDownButton);
 
-	        p1 = new JPanel();
-	        p2 = new JPanel(new GridBagLayout());
-	        p3 = new JPanel();
+        closeButton = createIconButton("/close.png", "/close_hover.png", buttonWidth, buttonHeight);
+        closeButton.addActionListener(e -> System.exit(0));
+        titlePanel.add(closeButton);
 
-	        p1.add(title);
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
 
-	        p3.add(loginButton);
-	        p3.add(registerButton);
+        // Left panel với hình ảnh
+        JPanel imagePanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                URL url = getClass().getResource("/ảnh background login.jpg");
+                ImageIcon icon = new ImageIcon(url);
+                Image img = icon.getImage();
+                g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+            }
+        };
+        imagePanel.setPreferredSize(new Dimension(400, 400));
+        imagePanel.setBackground(Color.WHITE);
 
-	        GridBagConstraints gbc = new GridBagConstraints();
-	        gbc.insets = new Insets(5, 5, 5, 5);
+        // Right panel với form đăng nhập
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(Color.WHITE);
 
-	        gbc.gridx = 0;
-	        gbc.gridy = 0;
-	        p2.add(usernameLabel, gbc);
+        JLabel titleLabel = new JLabel("Login", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel usernameLabel = new JLabel("Username:");
+        JLabel passwordLabel = new JLabel("Password:");
+        JLabel roleLabel = new JLabel("Role:");
 
-	        gbc.gridx = 1;
-	        gbc.gridy = 0;
-	        p2.add(usernameField, gbc);
+        usernameField = new JTextField();
+        usernameField.setPreferredSize(new Dimension(200, 30));
+        usernameField.setBorder(new RoundBorder(10, Color.LIGHT_GRAY)); // Bo góc cho JTextField
 
-	        gbc.gridx = 0;
-	        gbc.gridy = 1;
-	        p2.add(passwordLabel, gbc);
+        passwordField = new JPasswordField();
+        passwordField.setPreferredSize(new Dimension(200, 30));
+        passwordField.setBorder(new RoundBorder(10, Color.LIGHT_GRAY)); // Bo góc cho JPasswordField
 
-	        gbc.gridx = 1;
-	        gbc.gridy = 1;
-	        p2.add(passwordField, gbc);
+        roleComboBox = new JComboBox<>(new String[]{"Admin", "User"});
+        roleComboBox.setPreferredSize(new Dimension(200, 30));
+        roleComboBox.setBorder(new RoundBorder(10, Color.LIGHT_GRAY)); // Bo góc cho JComboBox
 
-	        gbc.gridx = 0;
-	        gbc.gridy = 2;
-	        p2.add(roleLabel, gbc);
+        loginButton = new JButton("Login");
+        loginButton.setPreferredSize(new Dimension(200, 30));
+        loginButton.setBackground(Color.BLACK);
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setBorder(new RoundBorder(10, Color.BLACK)); // Áp dụng RoundBorder
+        loginButton.setBorderPainted(false); // Ẩn viền của nút
+        loginButton.setFocusPainted(false); // Ẩn hiệu ứng khi focus
+        loginButton.addMouseListener(new ButtonHoverListener(loginButton, Color.decode("#C66A5E"), Color.BLACK)); // Thay đổi màu nền khi hover
 
-	        gbc.gridx = 1;
-	        gbc.gridy = 2;
-	        p2.add(roleComboBox, gbc);
+        registerButton = new JButton("Register");
+        registerButton.setPreferredSize(new Dimension(200, 30));
+        registerButton.setBackground(Color.BLACK);
+        registerButton.setForeground(Color.WHITE);
+        registerButton.setBorder(new RoundBorder(10, Color.BLACK)); // Áp dụng RoundBorder
+        registerButton.setBorderPainted(false); // Ẩn viền của nút
+        registerButton.setFocusPainted(false); // Ẩn hiệu ứng khi focus
+        registerButton.addMouseListener(new ButtonHoverListener(registerButton, Color.decode("#C66A5E"), Color.BLACK)); // Thay đổi màu nền khi hover
 
-	        mainPanel.add(p1, BorderLayout.NORTH);
-	        mainPanel.add(p2, BorderLayout.CENTER);
-	        mainPanel.add(p3, BorderLayout.SOUTH);
-	        add(mainPanel);
+        loginButton.addActionListener(new LoginButtonListener());
+        registerButton.addActionListener(new RegisterButtonListener());
 
-	}
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
 
-	private class LoginButtonListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String username = usernameField.getText();
-			String password = new String(passwordField.getPassword());
-			String role = (String) roleComboBox.getSelectedItem();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        loginPanel.add(titleLabel, gbc);
 
-			try (Connection connection = DatabaseConnection.getConnection()) {
-				String query;
-				if ("Admin".equals(role)) {
-					query = "SELECT * FROM Admins WHERE Username = ? AND Password = ?";
-				} else {
-					query = "SELECT * FROM Customers WHERE Username = ? AND Password = ?";
-				}
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        loginPanel.add(usernameLabel, gbc);
 
-				try (PreparedStatement statement = connection.prepareStatement(query)) {
-					statement.setString(1, username);
-					statement.setString(2, password);
+        gbc.gridx = 1;
+        loginPanel.add(usernameField, gbc);
 
-					try (ResultSet resultSet = statement.executeQuery()) {
-						if (resultSet.next()) {
-							if ("Admin".equals(role)) {
-								// Lấy thông tin Admin
-								int adminId = resultSet.getInt("AdminID");
-								int accountId = resultSet.getInt("AccountID");
-								String name = resultSet.getString("Name");
-								String adminUsername = resultSet.getString("Username");
-								String adminPassword = resultSet.getString("Password");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        loginPanel.add(passwordLabel, gbc);
 
-								Admin admin = new Admin(adminId, accountId, adminUsername, adminPassword, name);
-								AdminView adminView = new AdminView(admin);
-								adminView.setVisible(true);
-							} else {
-								// Lấy thông tin Customer
-								int customerId = resultSet.getInt("CustomerID");
-								int accountId = resultSet.getInt("AccountID");
-								String name = resultSet.getString("Name");
-								int age = resultSet.getInt("Age");
-								String phoneNumber = resultSet.getString("PhoneNumber");
-								String customerUsername = resultSet.getString("Username");
-								String customerPassword = resultSet.getString("Password");
+        gbc.gridx = 1;
+        loginPanel.add(passwordField, gbc);
 
-								Customer customer = new Customer(customerId,name, age, phoneNumber, accountId,
-										customerUsername, customerPassword);
-								CustomerView customerView = new CustomerView(customer);
-								customerView.setVisible(true);
-							}
-							dispose();
-						} else {
-							JOptionPane.showMessageDialog(LoginView.this, "Invalid username or password.",
-									"Login Failed", JOptionPane.ERROR_MESSAGE);
-						}
-					}
-				}
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-				JOptionPane.showMessageDialog(LoginView.this, "Database error.", "Login Failed",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		}
-	}
-	
-	private class RegisterButtonListener implements ActionListener {
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        loginPanel.add(roleLabel, gbc);
+
+        gbc.gridx = 1;
+        loginPanel.add(roleComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        loginPanel.add(loginButton, gbc);
+
+        gbc.gridy = 5;
+        loginPanel.add(registerButton, gbc);
+
+        mainPanel.add(imagePanel, BorderLayout.WEST);
+        mainPanel.add(loginPanel, BorderLayout.CENTER);
+        add(mainPanel);
+    }
+
+    private IconButton createIconButton(String iconPath, String hoverIconPath, int width, int height) {
+        ImageIcon icon = createResizedIcon(iconPath, width, height);
+        ImageIcon hoverIcon = createResizedIcon(hoverIconPath, width, height);
+        return new IconButton(icon, hoverIcon);
+    }
+
+    private ImageIcon createResizedIcon(String path, int width, int height) {
+        ImageIcon icon = new ImageIcon(getClass().getResource(path));
+        Image img = icon.getImage();
+        Image resizedImage = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
+        return new ImageIcon(resizedImage);
+    }
+
+    private String hashPassword(String password) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] encodedHash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : encodedHash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    private class LoginButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            // Mở trang đăng ký
-            RegistrationView registrationView = new RegistrationView();
-            registrationView.setVisible(true);
-            dispose();  // Đóng trang login
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            String role = (String) roleComboBox.getSelectedItem();
+
+            try {
+                String hashedPassword = hashPassword(password); // Mã hóa mật khẩu trước khi so sánh
+
+                System.out.println("Username: " + username);
+                System.out.println("Hashed Password: " + hashedPassword);
+                System.out.println("Role: " + role);
+
+                try (Connection connection = DatabaseConnection.getConnection()) {
+                    String query;
+                    if ("Admin".equals(role)) {
+                        query = "SELECT * FROM Admins WHERE Username = ? AND Password = ?";
+                    } else {
+                        query = "SELECT * FROM Customers WHERE Username = ? AND Password = ?";
+                    }
+
+                    System.out.println("Query: " + query);
+
+                    try (PreparedStatement statement = connection.prepareStatement(query)) {
+                        statement.setString(1, username);
+                        statement.setString(2, hashedPassword); // Sử dụng mật khẩu đã mã hóa
+
+                        try (ResultSet resultSet = statement.executeQuery()) {
+                            if (resultSet.next()) {
+                                System.out.println("Login successful!");
+
+                                if ("Admin".equals(role)) {
+                                    int adminId = resultSet.getInt("AdminID");
+                                    int accountId = resultSet.getInt("AccountID");
+                                    String name = resultSet.getString("Name");
+                                    String adminUsername = resultSet.getString("Username");
+                                    String adminPassword = resultSet.getString("Password");
+
+                                    Admin admin = new Admin(adminId, accountId, adminUsername, adminPassword, name);
+                                    AdminView adminView = new AdminView(admin);
+                                    adminView.setVisible(true);
+                                } else {
+                                    int customerId = resultSet.getInt("CustomerID");
+                                    int accountId = resultSet.getInt("AccountID");
+                                    String name = resultSet.getString("Name");
+                                    int age = resultSet.getInt("Age");
+                                    String phoneNumber = resultSet.getString("PhoneNumber");
+                                    String customerUsername = resultSet.getString("Username");
+                                    String customerPassword = resultSet.getString("Password");
+
+                                    Customer customer = new Customer(customerId, name, age, phoneNumber, accountId,
+                                            customerUsername, customerPassword);
+                                    CustomerView customerView = new CustomerView(customer);
+                                    customerView.setVisible(true);
+                                }
+                                dispose();
+                            } else {
+                                System.out.println("Invalid username or password.");
+                                JOptionPane.showMessageDialog(LoginView.this, "Invalid username or password.",
+                                        "Login Failed", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                    }
+                }
+            } catch (NoSuchAlgorithmException | SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(LoginView.this, "Database error.", "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			LoginView loginView = new LoginView();
-			loginView.setVisible(true);
-		});
-	}
+
+    public class RegisterButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            RegistrationView registrationView = new RegistrationView();
+            registrationView.setVisible(true);
+            dispose();
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            LoginView loginView = new LoginView();
+            loginView.setVisible(true);
+        });
+    }
 }

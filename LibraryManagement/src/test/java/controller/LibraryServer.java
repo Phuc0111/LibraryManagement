@@ -2,6 +2,7 @@ package controller;
 
 import java.io.*;
 import java.net.*;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,6 +53,36 @@ class ServerThread extends Thread {
             String command = (String) input.readObject();
 
             switch (command) {
+            
+	            case "REGISTER_USER":
+	                String name = (String) input.readObject();
+	                int age = input.readInt();
+	                String phoneNumber = (String) input.readObject();
+	                int accountId = input.readInt();
+	                String username = (String) input.readObject();
+	                String password = (String) input.readObject();
+	
+	                try {
+	                    boolean usernameExists = RegistrationDAO.isUsernameExist(username);
+	                    boolean accountIdExists = RegistrationDAO.isAccountIdExist(accountId);
+	
+	                    if (usernameExists) {
+	                        output.writeObject("USERNAME_EXISTS");
+	                    } else if (accountIdExists) {
+	                        output.writeObject("ACCOUNTID_EXISTS");
+	                    } else {
+	                        boolean registered = RegistrationDAO.registerUser(name, age, phoneNumber, accountId, username, password);
+	                        if (registered) {
+	                            output.writeObject("REGISTER_SUCCESS");
+	                        } else {
+	                            output.writeObject("REGISTER_FAILED");
+	                        }
+	                    }
+	                } catch (SQLException e) {
+	                    e.printStackTrace();
+	                    output.writeObject("DATABASE_ERROR");
+	                }
+                break;
                 case "UPDATE_CUSTOMER":
                     int customerIdUpdate = input.readInt();
                     String newName = (String) input.readObject();
